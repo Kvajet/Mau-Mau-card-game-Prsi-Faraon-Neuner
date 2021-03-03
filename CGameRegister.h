@@ -1,3 +1,4 @@
+#pragma once
 #include "CAce.h"
 #include "CJoker.h"
 #include "CSeven.h"
@@ -8,8 +9,12 @@
 class CGameRegister
 {
 public:
-    CGameRegister( const std::vector< std::shared_ptr< CCard > > & hand1 , const std::vector< std::shared_ptr< CCard > > & hand2 )
-        : m_hand1( hand1 ) , m_hand2( hand2 )
+    CGameRegister( const std::vector< std::shared_ptr< CCard > > & hand1 ,
+                   const std::vector< std::shared_ptr< CCard > > & hand2 , 
+                   const char & input ,
+                   const size_t & player1handIndex , 
+                   const size_t & player2handIndex )
+        : m_hand1( hand1 ) , m_hand2( hand2 ) , m_input( input ) , m_player1handIndex( player1handIndex ) , m_player2handIndex( player2handIndex )
     {
     }
 
@@ -50,13 +55,18 @@ public:
             return false;
     }
 
-private:
+    // for CRenderer purposed are public
     CCard::Color m_actColor;
     std::shared_ptr< CCard > m_lastCard;
-    size_t player = 0;
-    bool m_finished = false;
-    bool m_isLastBlocking = false;
 
     const std::vector< std::shared_ptr< CCard > > & m_hand1;
     const std::vector< std::shared_ptr< CCard > > & m_hand2;
+
+    bool m_finished = false;
+    size_t player = 0;
+    const char & m_input;
+    const size_t & m_player1handIndex , & m_player2handIndex;
+
+private:
+    bool m_isLastBlocking = false;
 };

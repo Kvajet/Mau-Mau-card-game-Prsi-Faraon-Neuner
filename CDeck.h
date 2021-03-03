@@ -20,9 +20,7 @@ public:
 
         Generate();
         Randomize();
-        Test();
-
-        m_register->AssignCard( m_pile.back() );
+        // Test();
 
         for( size_t i = 0 ; i < 4 ; i++ )
         {
@@ -30,18 +28,28 @@ public:
             m_hand2.push_back( DrawOne() );
         }
         
-        std::cout << "Hand1: \n";
-        for( const auto & it : m_hand1 ) it->Action();
-        std::cout << "Hand2: \n";
-        for( const auto & it : m_hand2 ) it->Action();
+        m_register->AssignCard( m_pile.back() );
+        m_usedCardsVec.push_back( m_pile.back() );
+        m_pile.erase( m_pile.begin() + 32 - m_usedCards );
+
+        // std::cout << "Total cards " << ( m_usedCardsVec.size() + m_pile.size() + m_hand1.size() + m_hand2.size() ) << "\n"; 
     }
 
     void Draw()
     {
-
+        if( m_pile.size() )
+        {
+            if( m_register->player ) m_hand2.push_back( DrawOne() );
+            else                     m_hand1.push_back( DrawOne() );
+        }
     }
 
     void ShowTop() const;
+
+    size_t RemainingCardsInPile() const
+    {
+        return m_pile.size();
+    }
 
 private:
     void Test() const
@@ -62,19 +70,20 @@ private:
         }
     }
 
-    const std::shared_ptr< CCard > & DrawOne()
+    std::shared_ptr< CCard > DrawOne()
     {
-        unsigned int remainingCards = 31 - usedCards;
+        unsigned int remainingCards = 32 - m_usedCards;
 
-        const std::shared_ptr< CCard > & tmp = m_pile.back();
-        m_pile.erase( m_pile.begin() + 31 - usedCards );
+        std::shared_ptr< CCard > tmp = m_pile.back();
+        m_pile.erase( m_pile.begin() + remainingCards );
+        m_usedCards++;
 
         return tmp;
     }
 
     void Randomize()
     {
-        unsigned int remainingCards = 32 - usedCards;
+        unsigned int remainingCards = 32 - m_usedCards;
 
         m_randBuffer = m_pile;
         m_pile.clear();
@@ -90,9 +99,11 @@ private:
         }
     }
 
-    size_t usedCards = 8;
+    size_t m_usedCards = 0;
     std::vector< std::shared_ptr< CCard > > m_pile;
     std::vector< std::shared_ptr< CCard > > m_randBuffer;
+    std::vector< std::shared_ptr< CCard > > m_usedCardsVec;
+
     std::shared_ptr< CGameRegister > m_register;
     std::vector< std::shared_ptr< CCard > > & m_hand1;
     std::vector< std::shared_ptr< CCard > > & m_hand2;
