@@ -22,9 +22,9 @@ public:
         std::cout << "I am CCard :) \n";
     }
 
-    bool operator == ( const std::shared_ptr< CCard > & card )
+    friend bool operator == ( const std::shared_ptr< CCard > & card1 , const std::shared_ptr< CCard > & card2 )
     {
-        return ( this->m_color == card->m_color || this->m_type == card->m_type );
+        return ( card1->m_color == card2->m_color || card1->m_type == card2->m_type );
     }
 
     friend std::ostream & operator << ( std::ostream & os , const std::shared_ptr< CCard > & card )

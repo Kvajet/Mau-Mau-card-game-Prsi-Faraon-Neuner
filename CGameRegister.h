@@ -12,8 +12,8 @@ public:
     CGameRegister( const std::vector< std::shared_ptr< CCard > > & hand1 ,
                    const std::vector< std::shared_ptr< CCard > > & hand2 , 
                    const char & input ,
-                   const size_t & player1handIndex , 
-                   const size_t & player2handIndex )
+                   size_t & player1handIndex , 
+                   size_t & player2handIndex )
         : m_hand1( hand1 ) , m_hand2( hand2 ) , m_input( input ) , m_player1handIndex( player1handIndex ) , m_player2handIndex( player2handIndex )
     {
     }
@@ -48,6 +48,12 @@ public:
         player = ! player;
     }
 
+    bool IsLastSpecial() const
+    {
+        CCard::BasicType type = m_lastCard->Type();
+        return type == CCard::BasicType::JOKER || type == CCard::BasicType::ACE || type == CCard::BasicType::SEVEN;
+    }
+
     // bool - true => player continues, false => second player plays
     bool Play()
     {
@@ -65,7 +71,7 @@ public:
     bool m_finished = false;
     size_t player = 0;
     const char & m_input;
-    const size_t & m_player1handIndex , & m_player2handIndex;
+    size_t & m_player1handIndex , & m_player2handIndex;
 
 private:
     bool m_isLastBlocking = false;

@@ -15,7 +15,6 @@ public:
     {
         while( m_input != 'l' )
         {
-            // m_deck->Play( /* card */ );
             m_renderer->Render( m_deck->RemainingCardsInPile() );
             ResolveInput();
         }
@@ -41,6 +40,9 @@ private:
                 break;
             case 'd':
                 m_deck->Draw();
+                break;
+            case 'r':
+                m_deck->Play();
                 break;
             default:
                 break;

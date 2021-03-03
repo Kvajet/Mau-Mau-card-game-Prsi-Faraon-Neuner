@@ -20,7 +20,6 @@ public:
 
         Generate();
         Randomize();
-        // Test();
 
         for( size_t i = 0 ; i < 4 ; i++ )
         {
@@ -31,8 +30,6 @@ public:
         m_register->AssignCard( m_pile.back() );
         m_usedCardsVec.push_back( m_pile.back() );
         m_pile.erase( m_pile.begin() + 32 - m_usedCards );
-
-        // std::cout << "Total cards " << ( m_usedCardsVec.size() + m_pile.size() + m_hand1.size() + m_hand2.size() ) << "\n"; 
     }
 
     void Draw()
@@ -44,7 +41,28 @@ public:
         }
     }
 
-    void ShowTop() const;
+    void Play()
+    {
+        if( m_register->IsLastSpecial() )
+        {
+
+        }
+        else
+        {
+            std::vector< std::shared_ptr< CCard > > & hand = m_register->player ? m_hand2 : m_hand1;
+            size_t index = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex; 
+            std::shared_ptr< CCard > currentCard = hand[ index ];
+
+            if( currentCard == m_register->m_lastCard )
+            {
+                m_register->m_lastCard = currentCard;
+                hand.erase( hand.begin() + index );
+                m_usedCardsVec.push_back( currentCard );
+                if( index >= hand.size() ) m_register->player ? m_register->m_player2handIndex-- : m_register->m_player1handIndex--;
+                m_register->ChangePlayer();
+            }
+        }
+    }
 
     size_t RemainingCardsInPile() const
     {
@@ -52,12 +70,6 @@ public:
     }
 
 private:
-    void Test() const
-    {
-        for( const auto & it : m_pile )
-            it->Action();
-    }
-
     void Generate()
     {
         for( char i = CCard::Color::ACORNS ; i <= CCard::Color::BELLS ; i++ )

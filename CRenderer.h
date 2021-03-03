@@ -36,35 +36,21 @@ public:
 
         if( m_register->m_finished )
         {
-            std::cout << "Hráč " << ( m_register->m_hand1.empty() ? "1" : "2" ) << " vyhrál!";
+            std::string tmp = m_register->m_hand1.empty() ? "1" : "2";
+            PrintToPos( "Hráč " + tmp + " vyhrál!" , StickTo::MIDDLE );
         }
         else
         {
-            PrintCard( "Top card: " + m_register->m_lastCard->Stringify() + " - remaining cards: " + std::to_string( remCards ) , StickTo::MIDDLE );
+            PrintTopCard( remCards );
 
             size_t index = 0;
-            if( m_register->player )
+            size_t playerIndex = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
+            std::string defPrefix = m_register->player ? "\033[0;32m" : "\033[0;34m";
+            for( const auto & it : m_register->player ? m_register->m_hand2 : m_register->m_hand1 )
             {
-                for( const auto & it : m_register->m_hand2 )
-                {
-                    std::string tmp;
-                    if( m_register->m_player2handIndex == index )
-                        tmp += "===> ";
-                    tmp += "\033[1;32m" + it->Stringify() + "\033[0m";
-                    PrintCard( tmp , StickTo::RIGHT );
-                    index++;
-                }
-            }
-            else
-            {
-                for( const auto & it : m_register->m_hand1 )
-                {
-                    std::string tmp = "\033[0;34m" + it->Stringify() + "\033[0m";
-                    if( m_register->m_player1handIndex == index )
-                        tmp += " <===";
-                    PrintCard( tmp , StickTo::LEFT );
-                    index++;
-                }
+                std::string tmp = ( playerIndex == index ? "\033[0;33m" : defPrefix ) + it->Stringify() + "\033[0m";
+                PrintToPos( tmp , m_register->player ? StickTo::RIGHT : StickTo::LEFT );
+                index++;
             }
         }
     }
@@ -76,12 +62,17 @@ private:
         ioctl( STDOUT_FILENO, TIOCGWINSZ, &m_window );
     }
 
+    void PrintTopCard( size_t remCards ) const
+    {
+        PrintToPos( "Top card: " + m_register->m_lastCard->Stringify() + " - remaining cards: " + std::to_string( remCards ) , StickTo::MIDDLE );
+    }
+
     void PrintMargin( size_t size ) const
     {
         for( size_t i = 0 ; i < size ; i++ ) std::cout << " ";
     }
 
-    void PrintCard( const std::string & str , StickTo stick ) const
+    void PrintToPos( const std::string & str , StickTo stick ) const
     {
         size_t margin = ( m_window.ws_col - str.length() ) / 2;
         switch( stick )
