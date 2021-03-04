@@ -44,6 +44,16 @@ public:
         return m_type;
     }
 
+    Color CColor() const
+    {
+        return m_color;
+    }
+
+    const char * TranslateColor( size_t index )
+    {
+        return m_colorsArray[ index ];
+    }
+
 protected:
     Color m_color;
     BasicType m_type;

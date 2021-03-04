@@ -1,3 +1,4 @@
+#pragma once
 #include "CDeck.h"
 #include "CRenderer.h"
 
@@ -6,8 +7,8 @@ class CMauMau
 public:
     CMauMau()
         : m_register( std::make_shared< CGameRegister >( m_hand1 , m_hand2 , m_input , m_player1handIndex , m_player2handIndex ) ) , 
-          m_deck( std::make_shared< CDeck >( m_register , m_hand1 , m_hand2 ) ) ,
-          m_renderer( std::make_unique< CRenderer >( m_register ) )
+          m_deck( std::make_shared< CDeck >( m_register , m_hand1 , m_hand2 , m_mode , m_colorIndex ) ) ,
+          m_renderer( std::make_unique< CRenderer >( m_register , m_mode , m_colorIndex ) )
     {
     }
 
@@ -30,16 +31,18 @@ private:
         switch( m_input )
         {
             case 'w':
-                if( playerIndex ) playerIndex--;
+                if( m_mode == CGameRegister::PlayMode::NORMAL_MODE && playerIndex )      playerIndex--;
+                else if( m_mode == CGameRegister::PlayMode::JOKER_MODE && m_colorIndex ) m_colorIndex--;
                 break;
             case 's':
-                if( playerIndex + 1 < handSize ) playerIndex++;
+                if( m_mode == CGameRegister::PlayMode::NORMAL_MODE && playerIndex + 1 < handSize ) playerIndex++;
+                else if( m_mode == CGameRegister::PlayMode::JOKER_MODE && m_colorIndex + 1 < 4 )   m_colorIndex++;
                 break;
             case 'e':
                 m_register->ChangePlayer();
                 break;
             case 'd':
-                m_deck->Draw();
+                if( m_mode == CGameRegister::PlayMode::NORMAL_MODE ) m_deck->Draw();
                 break;
             case 'r':
                 m_deck->Play();
@@ -50,6 +53,8 @@ private:
     }
 
     char m_input = 0;
+    CGameRegister::PlayMode m_mode = CGameRegister::PlayMode::NORMAL_MODE;
+    size_t m_colorIndex = 0;
     size_t m_player1handIndex = 0; // TODO - check range of hand size
     size_t m_player2handIndex = 0;
 

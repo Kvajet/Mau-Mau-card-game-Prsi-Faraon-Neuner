@@ -10,8 +10,10 @@
 class CRenderer
 {
 public:
-    CRenderer( const std::shared_ptr< CGameRegister > & gRegister )
-        : m_register( gRegister )
+    CRenderer( const std::shared_ptr< CGameRegister > & gRegister , 
+               const CGameRegister::PlayMode & mode , 
+               const size_t & colorIndex )
+        : m_register( gRegister ) , m_mode( mode ) , m_colorIndex( colorIndex )
     {
         tcgetattr( fileno( stdin ) , &terminal );
         terminal.c_lflag &= ~ICANON & ~ECHO;
@@ -39,7 +41,7 @@ public:
             std::string tmp = m_register->m_hand1.empty() ? "1" : "2";
             PrintToPos( "Hráč " + tmp + " vyhrál!" , StickTo::MIDDLE );
         }
-        else
+        else if( m_mode == CGameRegister::PlayMode::NORMAL_MODE )
         {
             PrintTopCard( remCards );
 
@@ -53,6 +55,14 @@ public:
                 index++;
             }
         }
+        else
+        {
+            for( size_t i = 0 ; i < 4 ; i++ )
+                PrintToPos(
+                    i == m_colorIndex ? "\033[0;32m" + std::string( m_colorsArray[ i ] ) + "\033[0m" : std::string( m_colorsArray[ i ] ) ,
+                    StickTo::MIDDLE
+                );
+        }
     }
 
 private:
@@ -64,7 +74,7 @@ private:
 
     void PrintTopCard( size_t remCards ) const
     {
-        PrintToPos( "Top card: " + m_register->m_lastCard->Stringify() + " - remaining cards: " + std::to_string( remCards ) , StickTo::MIDDLE );
+        PrintToPos( "Top card: " + m_register->m_lastCard->Stringify() + " - remaining cards: " + std::to_string( remCards ) + " - color: " + m_register->m_lastCard->TranslateColor( m_register->m_actColor ) , StickTo::MIDDLE );
     }
 
     void PrintMargin( size_t size ) const
@@ -96,4 +106,10 @@ private:
     struct termios terminal;
     mutable struct winsize m_window;
     const std::shared_ptr< CGameRegister > & m_register;
+    const CGameRegister::PlayMode & m_mode;
+    const size_t & m_colorIndex;
+
+    const char * const m_colorsArray[ 4 ] = {
+        "žaludy" , "zelený" , "červený" , "kule"
+    };
 };
