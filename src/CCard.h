@@ -18,10 +18,7 @@ public:
         UNTER = 0 , EIGHT , NINE , TEN , KING , ACE , JOKER , SEVEN 
     };
 
-    CCard( Color color , BasicType type )
-        : m_color( color ) , m_type( type )
-    {
-    }
+    CCard( Color color , BasicType type );
 
     friend bool operator == ( const std::shared_ptr< CCard > & card1 , const std::shared_ptr< CCard > & card2 )
     {
@@ -35,20 +32,9 @@ public:
         return os;
     }
 
-    std::string Stringify() const
-    {
-        return m_cardNamesArray[ m_type ] + std::string( " - " ) + m_colorsArray[ m_color ];
-    }
-
-    BasicType Type() const
-    {
-        return m_type;
-    }
-
-    Color CColor() const
-    {
-        return m_color;
-    }
+    std::string Stringify() const;
+    BasicType Type() const;
+    Color CColor() const;
 
     static const size_t m_totalColors = 4;
     static const size_t m_totalTypes  = 8;
