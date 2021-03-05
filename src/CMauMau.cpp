@@ -9,11 +9,12 @@ CMauMau::CMauMau()
 
 void CMauMau::Play()
 {
-    while( m_input != 'l' )
+    while( m_input != 'l' && ! m_register->m_finished )
     {
         m_renderer->Render( m_deck->RemainingCardsInPile() );
         ResolveInput();
     }
+    m_renderer->Render( m_deck->RemainingCardsInPile() );
 }
 
 void CMauMau::ResolveInput()
@@ -25,16 +26,21 @@ void CMauMau::ResolveInput()
     switch( m_input )
     {
         case 'w':
-            if( m_mode == CGameRegister::PlayMode::NORMAL_MODE && playerIndex )      playerIndex--;
-            else if( m_mode == CGameRegister::PlayMode::JOKER_MODE && m_colorIndex ) m_colorIndex--;
+            if( m_mode == CGameRegister::PlayMode::NORMAL_MODE )
+                playerIndex = playerIndex ? playerIndex - 1 : handSize - 1;
+            else if( m_mode == CGameRegister::PlayMode::JOKER_MODE )
+                m_colorIndex = m_colorIndex ? m_colorIndex - 1 : CCard::m_totalColors - 1;
             break;
         case 's':
-            if( m_mode == CGameRegister::PlayMode::NORMAL_MODE && playerIndex + 1 < handSize ) playerIndex++;
-            else if( m_mode == CGameRegister::PlayMode::JOKER_MODE && m_colorIndex + 1 < 4 )   m_colorIndex++;
+            if( m_mode == CGameRegister::PlayMode::NORMAL_MODE )
+                playerIndex = ( playerIndex + 1 ) % handSize;
+            else if( m_mode == CGameRegister::PlayMode::JOKER_MODE )
+                m_colorIndex = ( m_colorIndex + 1 ) % CCard::m_totalColors;
             break;
-        case 'e':
-            m_register->ChangePlayer();
-            break;
+        // develop feature only
+        // case 'e':
+        //     m_register->ChangePlayer();
+        //     break;
         case 'd':
             if( m_mode == CGameRegister::PlayMode::NORMAL_MODE ) m_deck->Draw();
             break;
@@ -44,4 +50,7 @@ void CMauMau::ResolveInput()
         default:
             break;
     }
+
+    if( ! m_hand1.size() || ! m_hand2.size() )
+        m_register->m_finished = true;
 }

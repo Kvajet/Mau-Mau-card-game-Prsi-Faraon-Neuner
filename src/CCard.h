@@ -3,10 +3,6 @@
 #include <memory>
 #include <cstring>
 
-/**
- * @class CCard
- * Abstract class for cards implementation
- */
 class CCard
 {
 public:
@@ -19,19 +15,8 @@ public:
     };
 
     CCard( Color color , BasicType type );
-
-    friend bool operator == ( const std::shared_ptr< CCard > & card1 , const std::shared_ptr< CCard > & card2 )
-    {
-        return ( card1->m_color == card2->m_color || card1->m_type == card2->m_type );
-    }
-
-    friend std::ostream & operator << ( std::ostream & os , const std::shared_ptr< CCard > & card )
-    {
-        os << "type: " << card->m_type << " color: " << card->m_color;
-
-        return os;
-    }
-
+    friend bool operator == ( const std::shared_ptr< CCard > & card1 , const std::shared_ptr< CCard > & card2 );
+    friend std::ostream & operator << ( std::ostream & os , const std::shared_ptr< CCard > & card );
     std::string Stringify() const;
     BasicType Type() const;
     Color CColor() const;

@@ -22,34 +22,9 @@ void CRenderer::Render( size_t remCards ) const
     RefreshSize();
     system( "clear" );
 
-    if( m_register->Finished() )
-    {
-        std::string tmp = m_register->m_hand1.empty() ? "1" : "2";
-        PrintToPos( "Hráč " + tmp + " vyhrál!" , StickTo::MIDDLE );
-    }
-    else if( m_mode == CGameRegister::PlayMode::NORMAL_MODE )
-    {
-        PrintTopCard( remCards );
-
-        size_t index = 0;
-        size_t playerIndex = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
-        std::string defPrefix = m_register->player ? PLAYER1_COLOR : PLAYER2_COLOR;
-        for( const auto & it : m_register->player ? m_register->m_hand2 : m_register->m_hand1 )
-        {
-            PrintToPos(
-                ( playerIndex == index ? CHOSEN_CARD : defPrefix ) + it->Stringify() + TERMINAL_RESET , 
-                m_register->player ? StickTo::RIGHT : StickTo::LEFT );
-            index++;
-        }
-    }
-    else
-    {
-        for( size_t i = 0 ; i < CCard::m_totalColors ; i++ )
-            PrintToPos(
-                i == m_colorIndex ? PLAYER1_COLOR + std::string( CCard::m_colorsArray[ i ] ) + TERMINAL_RESET : std::string( CCard::m_colorsArray[ i ] ) ,
-                StickTo::MIDDLE
-            );
-    }
+    if( m_register->m_finished )                              PrintFinishScreen();
+    else if( m_mode == CGameRegister::PlayMode::NORMAL_MODE ) PrintNormalMode( remCards );
+    else                                                      PrintJokerMode();
 }
 
 void CRenderer::RefreshSize() const
@@ -65,7 +40,9 @@ void CRenderer::PrintTopCard( size_t remCards ) const
         " - remaining cards: " + 
         std::to_string( remCards ) + 
         " - color: " + 
-        CCard::m_colorsArray[ m_register->m_actColor ] , 
+        CCard::m_colorsArray[ m_register->m_actColor ] + 
+        " - m_lastResolved: " + 
+        std::to_string( m_register->m_lastResolved ), 
         StickTo::MIDDLE
     );
 }
@@ -85,4 +62,35 @@ void CRenderer::PrintToPos( const std::string & str , StickTo stick ) const
         case StickTo::RIGHT:  PrintMargin( m_window.ws_col - str.length() ); break;
     }
     std::cout << str << "\n";
+}
+
+void CRenderer::PrintNormalMode( size_t remCards ) const
+{
+    PrintTopCard( remCards );
+
+    size_t index = 0;
+    size_t playerIndex = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
+    std::string defPrefix = m_register->player ? PLAYER1_COLOR : PLAYER2_COLOR;
+    for( const auto & it : m_register->player ? m_register->m_hand2 : m_register->m_hand1 )
+    {
+        PrintToPos(
+            ( playerIndex == index ? CHOSEN_CARD : defPrefix ) + it->Stringify() + TERMINAL_RESET , 
+            m_register->player ? StickTo::RIGHT : StickTo::LEFT );
+        index++;
+    }
+}
+
+void CRenderer::PrintJokerMode() const
+{
+    for( size_t i = 0 ; i < CCard::m_totalColors ; i++ )
+        PrintToPos(
+            i == m_colorIndex ? PLAYER1_COLOR + std::string( CCard::m_colorsArray[ i ] ) + TERMINAL_RESET : std::string( CCard::m_colorsArray[ i ] ) ,
+            StickTo::MIDDLE
+        );
+}
+
+void CRenderer::PrintFinishScreen() const
+{
+    std::string tmp = m_register->m_hand1.empty() ? "1" : "2";
+    PrintToPos( "Hráč " + tmp + " vyhrál!" , StickTo::MIDDLE );
 }

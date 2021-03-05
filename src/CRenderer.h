@@ -25,6 +25,9 @@ private:
     void PrintTopCard( size_t remCards ) const;
     void PrintMargin( size_t size ) const;
     void PrintToPos( const std::string & str , StickTo stick ) const;
+    void PrintNormalMode( size_t remCards ) const;
+    void PrintJokerMode() const;
+    void PrintFinishScreen() const;
 
     struct termios terminal;
     mutable struct winsize m_window;

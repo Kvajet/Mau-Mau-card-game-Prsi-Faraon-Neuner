@@ -15,15 +15,16 @@ public:
     void Draw( bool innerCall = false );
     void Play();
     size_t RemainingCardsInPile() const;
+    const std::vector< std::shared_ptr< CCard > > & GetPile() const;
 
 private:
     void Generate();
     void DropCard( std::vector< std::shared_ptr < CCard > > & hand , size_t index , bool innerCall = false );
-    std::shared_ptr< CCard > DrawOne();
+    void DrawOne();
     void Randomize();
     bool HasCounterplay() const;
     void ActionSeven();
-    void ActionJoker();
+    void ActionJoker( std::vector< std::shared_ptr < CCard > > & hand , size_t index );
     void ActionAce();
     void Reserve();
 

@@ -17,13 +17,13 @@ CDeck::CDeck( const std::shared_ptr< CGameRegister > & gameRegister ,
     Generate();
     Randomize();
 
-    for( size_t i = 0 ; i < START_CARDS ; i++ )
+    for( size_t i = 0 ; i < START_CARDS * 2 ; i++ )
     {
-        m_hand1.push_back( DrawOne() );
-        m_hand2.push_back( DrawOne() );
+        DrawOne();
+        m_register->ChangePlayer();
     }
     
-    m_register->AssignCard( m_pile.back() );
+    m_register->AssignCard( m_pile.back() , m_pile , true );
     m_usedCardsVec.push_back( m_pile.back() );
     m_pile.pop_back();
 
@@ -32,85 +32,70 @@ CDeck::CDeck( const std::shared_ptr< CGameRegister > & gameRegister ,
 
 void CDeck::Draw( bool innerCall )
 {
-    if( m_register->IsLastSpecial() && m_register->m_lastCard->Type() != CCard::BasicType::JOKER && ! innerCall )
-        return;
-
-    if( m_pile.size() )
+    CCard::BasicType type = m_register->m_lastCard->Type();
+    
+    if( ! m_register->m_lastResolved && ( type == CCard::BasicType::SEVEN || type == CCard::BasicType::ACE ) )
     {
-        if( m_register->player ) m_hand2.push_back( DrawOne() );
-        else                     m_hand1.push_back( DrawOne() );
-
-        if( ! innerCall ) m_register->ChangePlayer();
-    }
-    if( ! m_pile.size() && m_usedCardsVec.size() > 1 )
-    {
-        std::shared_ptr< CCard > lastCardHolder = m_usedCardsVec.back();
-        m_usedCardsVec.pop_back();
-
-        while( m_usedCardsVec.size() )
+        if( m_register->m_lastCard->Type() == CCard::BasicType::SEVEN )
         {
-            m_pile.push_back( m_usedCardsVec.back() );
-            m_usedCardsVec.pop_back();
+            ActionSeven();
+            m_register->m_lastResolved = true;
         }
-        
-        m_usedCardsVec.push_back( lastCardHolder );
+        return;
     }
+
+    DrawOne();
+    if( ! innerCall ) m_register->ChangePlayer();
 }
 
 void CDeck::Play()
 {
     if( m_mode == CGameRegister::PlayMode::JOKER_MODE )
     {
-        m_register->m_actColor = ( CCard::Color )m_colorIndex;
+        m_register->m_actColor = static_cast< CCard::Color>( m_colorIndex );
         m_mode = CGameRegister::PlayMode::NORMAL_MODE;
         return;
     }
 
-    if( m_register->IsLastSpecial() && ! m_register->m_lastResolved )
-    {
-        if( HasCounterplay() )
-        {
-            if( m_register->m_lastCard->Type() == CCard::BasicType::SEVEN )
-            {
-                std::vector< std::shared_ptr < CCard > > & hand = m_register->player ? m_hand2 : m_hand1; 
-                size_t index = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
+    std::vector< std::shared_ptr < CCard > > & hand = m_register->player ? m_hand2 : m_hand1; 
+    size_t index = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
 
+    if( ! m_register->m_lastResolved )
+    {
+        switch( m_register->m_lastCard->Type() )
+        {
+            case CCard::BasicType::SEVEN:
                 if( hand[ index ]->Type() == CCard::BasicType::SEVEN )
                 {
                     m_register->m_sevenAmplifier++;
                     DropCard( hand , index );
                 }
-            }
-            else
-            {
-                std::vector< std::shared_ptr < CCard > > & hand = m_register->player ? m_hand2 : m_hand1; 
-                size_t index = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
-
-                if( hand[ index ]->Type() == CCard::BasicType::ACE )
-                {
-                    DropCard( hand , index );
+                else
+                { 
+                    Draw();
+                    m_register->m_lastResolved = true;
                 }
-            }
-        }
-        else
-        {
-            if( m_register->m_lastCard->Type() == CCard::BasicType::SEVEN )      ActionSeven();
-            else if( m_register->m_lastCard->Type() == CCard::BasicType::JOKER ) ActionJoker();
-            else                                                                 m_register->ChangePlayer();
+                return;
+            case CCard::BasicType::ACE:
+                if( hand[ index ]->Type() == CCard::BasicType::ACE ) DropCard( hand , index );
+                else                                                 ActionAce();
+                return;
+            case CCard::BasicType::JOKER: 
+                if( hand[ index ]->CColor() == m_register->m_actColor ) ActionJoker( hand , index );
+                return;
+            default:
+                break;
         }
     }
     else
     {
-        std::vector< std::shared_ptr < CCard > > & hand = m_register->player ? m_hand2 : m_hand1; 
-        size_t index = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
-
         if( hand[ index ]->Type() == CCard::BasicType::JOKER )
         {
             m_mode = CGameRegister::PlayMode::JOKER_MODE;
             DropCard( hand , index , true );
+            m_register->m_lastResolved = false;
             return;
         }
-
         DropCard( hand , index );
     }
 }
@@ -118,6 +103,11 @@ void CDeck::Play()
 size_t CDeck::RemainingCardsInPile() const
 {
     return m_pile.size();
+}
+
+const std::vector< std::shared_ptr< CCard > > & CDeck::GetPile() const
+{
+    return m_pile;
 }
 
 void CDeck::Generate()
@@ -131,11 +121,9 @@ void CDeck::DropCard( std::vector< std::shared_ptr < CCard > > & hand , size_t i
 {
     std::shared_ptr< CCard > currentCard = hand[ index ];
 
-    if( currentCard == m_register->m_lastCard || 
-        innerCall || 
-        ( m_register->m_lastCard->Type() == CCard::BasicType::JOKER && m_register->m_actColor == currentCard->CColor() ) )
+    if( currentCard == m_register->m_lastCard || innerCall )
     {
-        m_register->m_lastCard = currentCard;
+        m_register->AssignCard( currentCard , m_pile );
         hand.erase( hand.begin() + index );
         m_usedCardsVec.push_back( currentCard );
         if( index >= hand.size() ) m_register->player ? m_register->m_player2handIndex-- : m_register->m_player1handIndex--;
@@ -143,13 +131,31 @@ void CDeck::DropCard( std::vector< std::shared_ptr < CCard > > & hand , size_t i
     }
 }
 
-std::shared_ptr< CCard > CDeck::DrawOne()
+void CDeck::DrawOne()
 {
+    if( ! m_pile.size() && m_usedCardsVec.size() > 1 )
+    {
+        std::shared_ptr< CCard > lastCardHolder = m_usedCardsVec.back();
+        m_usedCardsVec.pop_back();
+
+        while( m_usedCardsVec.size() )
+        {
+            m_pile.push_back( m_usedCardsVec.back() );
+            m_usedCardsVec.pop_back();
+        }
+        
+        m_usedCardsVec.push_back( lastCardHolder );
+    }
+
     std::shared_ptr< CCard > tmp = m_pile.back();
     m_pile.pop_back();
     m_usedCards++;
-
-    return tmp;
+    
+    if( m_pile.size() )
+    {
+        if( m_register->player ) m_hand2.push_back( tmp );
+        else                     m_hand1.push_back( tmp );
+    }
 }
 
 void CDeck::Randomize()
@@ -193,20 +199,16 @@ bool CDeck::HasCounterplay() const
 
 void CDeck::ActionSeven()
 {
-    for( size_t i = 0 ; i < 2 * m_register->m_sevenAmplifier ; i++ ) Draw( true );
+    for( size_t i = 0 ; i < 2 * m_register->m_sevenAmplifier ; i++ ) DrawOne();
     m_register->ChangePlayer();
     m_register->m_lastResolved = true;
     m_register->m_sevenAmplifier = 1;
-    m_register->m_lastResolved = true;
 }
 
-void CDeck::ActionJoker()
+void CDeck::ActionJoker( std::vector< std::shared_ptr < CCard > > & hand , size_t index )
 {
-    std::vector< std::shared_ptr < CCard > > & hand = m_register->player ? m_hand2 : m_hand1; 
-    size_t index = m_register->player ? m_register->m_player2handIndex : m_register->m_player1handIndex;
-
-    if( hand[ index ]->CColor() == m_register->m_actColor )
-        DropCard( hand , index );
+    DropCard( hand , index , true );
+    m_register->m_lastResolved = true;
 }
 
 void CDeck::ActionAce()

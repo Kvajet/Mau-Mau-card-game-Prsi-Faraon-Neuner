@@ -15,8 +15,7 @@ public:
                    const char & input ,
                    size_t & player1handIndex , 
                    size_t & player2handIndex );
-    void AssignCard( const std::shared_ptr< CCard > & card );
-    bool Finished() const;
+    void AssignCard( const std::shared_ptr< CCard > & card , const std::vector< std::shared_ptr< CCard > > & pile , bool startCall = false );
     void ChangePlayer();
     bool IsLastSpecial() const;
 
@@ -26,13 +25,12 @@ public:
     const std::vector< std::shared_ptr< CCard > > & m_hand1;
     const std::vector< std::shared_ptr< CCard > > & m_hand2;
 
-    bool m_lastResolved = false;
+    bool m_lastResolved = true;
     size_t m_sevenAmplifier = 1;
     size_t player = 0;
     const char & m_input;
     size_t & m_player1handIndex , & m_player2handIndex;
+    bool m_finished = false;
 
 private:
-    bool m_finished = false;
-    bool m_isLastBlocking = false;
 };

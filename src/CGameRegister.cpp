@@ -13,15 +13,22 @@ CGameRegister::CGameRegister( const std::vector< std::shared_ptr< CCard > > & ha
 {
 }
 
-void CGameRegister::AssignCard( const std::shared_ptr< CCard > & card )
+void CGameRegister::AssignCard( const std::shared_ptr< CCard > & card , const std::vector< std::shared_ptr< CCard > > & pile , bool startCall )
 {
     m_lastCard = card;
-    if( IsLastSpecial() ) m_lastResolved = false;
-}
+    CCard::BasicType type = card->Type();
 
-bool CGameRegister::Finished() const
-{
-    return m_finished;
+    if( type == CCard::BasicType::JOKER )
+    {
+        m_actColor = card->CColor();
+        m_lastResolved = false;
+    }
+    else if( startCall &&
+             ( type == CCard::BasicType::ACE || type == CCard::BasicType::SEVEN ) && 
+             ( card->CColor() == pile.front()->CColor() ) )
+        m_lastResolved = false;
+    else if( ! startCall && ( type == CCard::BasicType::ACE || type == CCard::BasicType::SEVEN ) )
+        m_lastResolved = false;
 }
 
 void CGameRegister::ChangePlayer()
