@@ -27,9 +27,9 @@ void CMauMau::ResolveInput()
     {
         case 'w':
             if( m_mode == CGameRegister::PlayMode::NORMAL_MODE )
-                playerIndex = playerIndex ? playerIndex - 1 : handSize - 1;
+                playerIndex = ( playerIndex - 1 ) % handSize;
             else if( m_mode == CGameRegister::PlayMode::JOKER_MODE )
-                m_colorIndex = m_colorIndex ? m_colorIndex - 1 : CCard::m_totalColors - 1;
+                m_colorIndex = ( m_colorIndex - 1 ) % CCard::m_totalColors;
             break;
         case 's':
             if( m_mode == CGameRegister::PlayMode::NORMAL_MODE )
